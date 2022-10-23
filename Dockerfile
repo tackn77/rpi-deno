@@ -8,18 +8,15 @@ RUN cd deno && CARGO_HOME=/cargo cargo build --release
 
 FROM arm64v8/debian:bullseye-slim
 
-ENV APP=/usr/local/bin/deno
+ENV APP=/usr/bin/deno
 ENV APP_USER=deno
-ENV APP_HOME=/home/deno
+ENV APP_UID=1993
 
-RUN groupadd $APP_USER \
-    && useradd -g $APP_USER $APP_USER \
-    && mkdir -p ${APP_HOME}
+RUN groupadd --gid $APP_UID $APP_USER \
+    && useradd -g $APP_USER -u $APP_UID -s /bin/sh -M $APP_USER
 
 COPY --from=build-rust /usr/local/src/deno/target/release/deno ${APP}
 
-RUN chown -R $APP_USER:$APP_USER ${APP}
-USER $APP_USER
-WORKDIR ${APP_HOME}
+WORKDIR /
 
-CMD ["/bin/bash"]
+CMD ["/bin/sh"]
