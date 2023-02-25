@@ -1,7 +1,7 @@
 FROM arm64v8/rust AS build-rust
 WORKDIR /usr/local/src
 
-ENV DENO_VERSION=v1.27.0
+ENV DENO_VERSION=main
 RUN git clone --recurse-submodules https://github.com/denoland/deno.git -b ${DENO_VERSION} --depth 1 
 RUN cd deno && CARGO_HOME=/cargo cargo check
 RUN cd deno && CARGO_HOME=/cargo cargo build --release
