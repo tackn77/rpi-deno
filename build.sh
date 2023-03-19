@@ -1,16 +1,22 @@
 #!/bin/bash
-tagname=`curl --silent https://api.github.com/repos/denoland/deno/releases/latest | jq --raw-output .tag_name`
-envname=DENO_VERSION=${tagname}
+set -eux
 
-if [ -f .env ]; then
-    check=`cat .env`
-else
-    check="Not File"
-fi
+cd "$(dirname "$0")"
 
-if [[ $envname == $check ]]; then
-  echo "Build Exists"
+tagname=`curl --silent https://api.github.com/repos/denoland/deno/releases/latest | jq --raw-output ".tag_name"`
+current_build_digest=$(docker image ls tackn/deno:"$tagname" -q)
+
+if [ -n "$current_build_digest" ]; then
+  echo "Build already exists for $tagname"
 else
-  echo ${envname} > .env
-  docker build . --no-cache --force-rm --tag tackn/deno:${tagname} --cpuset-cpus 0-1
+  docker build . \
+    --no-cache \
+    --force-rm \
+    --build-arg DENO_VERSION="$tagname" \
+    --tag tackn/deno:"$tagname" \
+    --cpuset-cpus 0-1
+
+  docker push tackn/deno:"$tagname"
+  docker tag tackn/deno:${tagname} tackn/deno:latest
+  docker push tackn/deno:latest
 fi
