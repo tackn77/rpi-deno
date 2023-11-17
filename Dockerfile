@@ -1,12 +1,14 @@
 FROM arm64v8/rust AS build-rust
 WORKDIR /usr/local/src
 
+RUN apt-get update && apt-get install -y cmake protobuf-compiler
+
 ARG DENO_VERSION=main
 RUN git clone --recurse-submodules https://github.com/denoland/deno.git -b ${DENO_VERSION} --depth 1 
 RUN cd deno && CARGO_HOME=/cargo cargo check
 RUN cd deno && CARGO_HOME=/cargo cargo build --release
 
-FROM arm64v8/debian:bullseye-slim
+FROM arm64v8/debian:stable-slim
 
 ENV APP=/usr/bin/deno
 ENV APP_USER=deno
